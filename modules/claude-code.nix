@@ -1,6 +1,22 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.programs.claudeBootstrap;
+
+  upstream = ../upstream;
+  templates = "${upstream}/templates";
+
+  # Discover skills dynamically so upstream additions need no code change.
+  skillNames = builtins.attrNames (builtins.readDir "${templates}/skills");
+  skillFiles = lib.listToAttrs (map (name: {
+    name = ".claude/skills/${name}";
+    value = { source = "${templates}/skills/${name}"; recursive = true; };
+  }) skillNames);
+
+  claudeMdSource =
+    if cfg.personalClaudeMd == ""
+    then "${templates}/CLAUDE.md"
+    else pkgs.writeText "CLAUDE.md"
+      (builtins.readFile "${templates}/CLAUDE.md" + "\n\n" + cfg.personalClaudeMd);
 in {
   options.programs.claudeBootstrap = {
     enable = lib.mkEnableOption "declarative claude-code-bootstrap setup";
@@ -40,5 +56,12 @@ in {
     home.packages = (with pkgs; [
       ripgrep fd jq yq-go gh glab nodejs bun claude-code
     ]) ++ lib.optional cfg.rtk (pkgs.callPackage ../pkgs/rtk.nix { });
+
+    home.file = skillFiles // {
+      ".claude/CLAUDE.md".source = claudeMdSource;
+      ".claude/RTK.md".source = "${templates}/RTK.md";
+      ".claude/conventional-commits.md".source = "${templates}/conventional-commits.md";
+      ".claude/rules/context7.md".source = "${templates}/rules/context7.md";
+    };
   };
 }
