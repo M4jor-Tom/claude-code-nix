@@ -102,6 +102,11 @@ For Task 1, comment out both `programs.claudeBootstrap.rtk` and leave only `enab
         let pkgs = nixpkgs.legacyPackages.${system};
         in { rtk = pkgs.callPackage ./pkgs/rtk.nix { }; });
 
+      # Tools the maintenance skill needs, guaranteed present via `nix develop`.
+      devShells = forAll (system:
+        let pkgs = nixpkgs.legacyPackages.${system};
+        in { default = pkgs.mkShell { packages = [ pkgs.gh pkgs.git ]; }; });
+
       checks = forAll (system: {
         example = (home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.${system};
@@ -111,6 +116,9 @@ For Task 1, comment out both `programs.claudeBootstrap.rtk` and leave only `enab
     };
 }
 ```
+
+Note: the `devShells.default` output gives the maintenance skill (Task 7) `gh` and `git`
+regardless of the host, so it can be run with `nix develop` on a minimal machine.
 
 Note: `packages.rtk` references `./pkgs/rtk.nix`, created in Task 5. Until then, temporarily remove the `packages = ...;` block (or point it at a stub). Add a placeholder to keep the flake evaluable:
 
@@ -545,7 +553,9 @@ description: Use to check whether SkYNewZ/claude-code-bootstrap has new commits 
 
 # Update claude-code-bootstrap flake
 
-Run from the repo root. All state lives in the `upstream/` git submodule pointer.
+Run from the repo root, inside the flake's devshell so `gh` and `git` are guaranteed
+present: `nix develop` (or prefix commands with `nix develop -c`). All state lives in
+the `upstream/` git submodule pointer.
 
 ## 1. Detect drift
 
@@ -681,9 +691,9 @@ setup on activation.
 
 ## Keeping it in sync
 
-Run the `update-bootstrap-flake` skill from the repo. It checks upstream for new commits;
-if there are any, it syncs the submodule, reconciles the module, and opens a PR. No new
-commits → it stops.
+Run the `update-bootstrap-flake` skill from the repo, inside `nix develop` (which provides
+`gh` and `git`). It checks upstream for new commits; if there are any, it syncs the
+submodule, reconciles the module, and opens a PR. No new commits → it stops.
 ````
 
 - [ ] **Step 2: Full flake check**
