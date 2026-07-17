@@ -17,7 +17,9 @@
     {
       homeManagerModules.default = import ./modules/claude-code.nix;
 
-      # packages added in Task 5
+      packages = forAll (system:
+        let pkgs = nixpkgs.legacyPackages.${system};
+        in { rtk = pkgs.callPackage ./pkgs/rtk.nix { }; });
 
       # Tools the maintenance skill needs, guaranteed present via `nix develop`.
       devShells = forAll (system:
