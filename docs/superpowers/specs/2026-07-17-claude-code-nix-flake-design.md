@@ -24,7 +24,7 @@ keep the flake in sync when the upstream (Nix-free) repo changes.
 | Consumer's Nix setup | Flakes + home-manager → ship a home-manager module. |
 | Managed scope | Everything: CLI tools, skills, settings.json + rules, plugins + MCP. |
 | `~/.claude/CLAUDE.md` | **Upstream wins** (full ownership). A commented, default-off "personal block" knob left in the module to re-add graphify/email later. |
-| How upstream content reaches the flake | **git submodule** at `upstream/`. No vendoring, no Nix pin, no `upstream.json`. |
+| How upstream content reaches the flake | **git submodule** at `upstream/`. No vendoring, no Nix pin. |
 | Upstream commit tracking | The submodule pointer itself (git-native). `flake.lock` pins only this repo's own inputs. |
 | Update mechanism | A repo-local Claude Code **skill** using local git commands; opens a PR on change. |
 | Language (`settings.json`) | **English** (override upstream's French). |
