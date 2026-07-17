@@ -26,6 +26,24 @@ let
       s2 = if cfg.rtk then s1 else builtins.removeAttrs s1 [ "hooks" ];
     in s2;
   settingsFile = (pkgs.formats.json { }).generate "claude-settings.json" settings;
+
+  marketplaces = [
+    "anthropics/claude-plugins-official"
+    "thedotmack/claude-mem"
+    "nextlevelbuilder/ui-ux-pro-max-skill"
+    "Egonex-AI/Understand-Anything"
+    "DietrichGebert/ponytail"
+  ];
+  plugins = [
+    "superpowers@claude-plugins-official"
+    "frontend-design@claude-plugins-official"
+    "claude-md-management@claude-plugins-official"
+    "claude-mem@thedotmack"
+    "ui-ux-pro-max@ui-ux-pro-max-skill"
+    "understand-anything@understand-anything"
+    "ponytail@ponytail"
+  ];
+  mktLines = pre: xs: lib.concatMapStringsSep "\n" (x: "  claude ${pre} ${x} || true") xs;
 in {
   options.programs.claudeBootstrap = {
     enable = lib.mkEnableOption "declarative claude-code-bootstrap setup";
@@ -73,5 +91,17 @@ in {
       ".claude/rules/context7.md".source = "${templates}/rules/context7.md";
       ".claude/settings.json".source = settingsFile;
     };
+
+    home.activation.claudeBootstrap = lib.mkIf cfg.plugins (
+      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if command -v claude >/dev/null 2>&1; then
+        ${mktLines "plugin marketplace add" marketplaces}
+        ${mktLines "plugin install" plugins}
+          claude mcp add --transport http context7 https://mcp.context7.com/mcp --scope user || true
+        else
+          echo "claudeBootstrap: 'claude' not on PATH; skipping plugin/MCP setup" >&2
+        fi
+      ''
+    );
   };
 }
