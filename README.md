@@ -30,8 +30,15 @@ setup on activation.
 - `claude-code` is unfree in nixpkgs. Set `nixpkgs.config.allowUnfree = true;`
   (or `nixpkgs.config.allowUnfreePredicate` scoped to just `claude-code`) in your own
   config, or the module won't build.
-- Pre-existing unmanaged files in `~/.claude` (e.g. your own `skills/graphify`) will
-  collide with home-manager. Set `home.backupFileExtension = "bak";` to let it back them up.
+- **If you have used Claude Code before**, you already have `~/.claude/settings.json`,
+  `~/.claude/CLAUDE.md`, and possibly your own `~/.claude/skills/*` — home-manager will
+  **abort the entire first switch** on these unmanaged files unless you set
+  `home.backupFileExtension = "bak";` (which moves them aside). This is effectively
+  required, not optional.
+- The plugin/marketplace/MCP setup runs on **every** `home-manager switch` (≈13 `claude`
+  network calls: it installs third-party marketplace plugins and registers the context7
+  MCP endpoint). It's idempotent and non-fatal, but if you don't want it, set
+  `programs.claudeBootstrap.plugins = false;`.
 - `rtk = false` strips the RTK hooks from settings.json (matches upstream when rtk is absent).
 - CLAUDE.md is upstream's; set `personalClaudeMd` to append your own block.
 

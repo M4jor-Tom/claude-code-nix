@@ -39,6 +39,7 @@ Map each change against `modules/claude-code.nix`:
 | `PLUGINS` array changed in `setup.sh` | Update the `plugins` list. |
 | New `claude mcp add ...` in `setup.sh` | Add the command to the activation script. |
 | New install step / new CLI tool | Add the package to `home.packages`. |
+| `rtk` released a new version (check `cargo`/crates.io; not in the submodule) | Bump `version` + `src.hash` + `cargoHash` in `pkgs/rtk.nix` (use `lib.fakeHash` then read the correct hash from the build error). |
 
 **Anything you cannot confidently classify: do NOT edit. Record it under "Needs review" in the PR body.**
 

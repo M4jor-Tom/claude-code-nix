@@ -93,7 +93,8 @@ in {
     };
 
     home.activation.claudeBootstrap = lib.mkIf cfg.plugins (
-      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      lib.hm.dag.entryAfter [ "installPackages" ] ''
+        export PATH="${config.home.profileDirectory}/bin:$PATH"
         if command -v claude >/dev/null 2>&1; then
         ${mktLines "plugin marketplace add" marketplaces}
         ${mktLines "plugin install" plugins}
@@ -103,5 +104,10 @@ in {
         fi
       ''
     );
+
+    assertions = [{
+      assertion = builtins.pathExists "${templates}/settings.json";
+      message = "claudeBootstrap: upstream/ submodule is empty. Import this flake with '?submodules=1' in the URL (e.g. github:you/claude-code-nix?submodules=1).";
+    }];
   };
 }
