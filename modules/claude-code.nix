@@ -17,6 +17,15 @@ let
     then "${templates}/CLAUDE.md"
     else pkgs.writeText "CLAUDE.md"
       (builtins.readFile "${templates}/CLAUDE.md" + "\n\n" + cfg.personalClaudeMd);
+
+  baseSettings = builtins.fromJSON (builtins.readFile "${templates}/settings.json");
+  settings =
+    let
+      s0 = baseSettings // { language = cfg.language; };
+      s1 = if cfg.statusLine then s0 else builtins.removeAttrs s0 [ "statusLine" ];
+      s2 = if cfg.rtk then s1 else builtins.removeAttrs s1 [ "hooks" ];
+    in s2;
+  settingsFile = (pkgs.formats.json { }).generate "claude-settings.json" settings;
 in {
   options.programs.claudeBootstrap = {
     enable = lib.mkEnableOption "declarative claude-code-bootstrap setup";
@@ -62,6 +71,7 @@ in {
       ".claude/RTK.md".source = "${templates}/RTK.md";
       ".claude/conventional-commits.md".source = "${templates}/conventional-commits.md";
       ".claude/rules/context7.md".source = "${templates}/rules/context7.md";
+      ".claude/settings.json".source = settingsFile;
     };
   };
 }
