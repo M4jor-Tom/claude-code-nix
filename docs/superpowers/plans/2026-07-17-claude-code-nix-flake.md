@@ -21,7 +21,7 @@
 
 ---
 
-### Task 1: Repo scaffold, upstream submodule, flake with test harness
+### Task 1: Repo scaffold, upstream submodule, flake with test harness  ✅ **DONE** (commits `3fcbd96..b355ffe`, review clean)
 
 **Files:**
 - Create: `flake.nix`
@@ -32,7 +32,7 @@
 **Interfaces:**
 - Produces: `homeManagerModules.default` (importable module), `checks.<system>.example` (a home-manager `activationPackage` importing the module), `packages.<system>.rtk`.
 
-- [ ] **Step 1: Add the upstream submodule**
+- [x] **Step 1: Add the upstream submodule**
 
 ```bash
 cd /home/theta/repos/claude-code-nix
@@ -41,7 +41,7 @@ git submodule update --init --recursive
 ls upstream/templates/settings.json   # must exist
 ```
 
-- [ ] **Step 2: Create the empty module stub**
+- [x] **Step 2: Create the empty module stub**
 
 `modules/claude-code.nix`:
 
@@ -55,7 +55,7 @@ in {
 }
 ```
 
-- [ ] **Step 3: Create the example consumer config**
+- [x] **Step 3: Create the example consumer config**
 
 `examples/home.nix`:
 
@@ -74,7 +74,7 @@ in {
 Note: `rtk` option does not exist yet (Task 5). It is set here now so later tasks don't need to touch this file; until Task 2 adds the option, temporarily comment the `rtk` line out. Uncomment it in Task 5.
 For Task 1, comment out both `programs.claudeBootstrap.rtk` and leave only `enable`.
 
-- [ ] **Step 4: Write the flake**
+- [x] **Step 4: Write the flake**
 
 `flake.nix`:
 
@@ -128,7 +128,7 @@ Note: `packages.rtk` references `./pkgs/rtk.nix`, created in Task 5. Until then,
 
 Delete the `packages = forAll ...;` block for Task 1; re-add it in Task 5.
 
-- [ ] **Step 5: Verify the flake evaluates and the example builds**
+- [x] **Step 5: Verify the flake evaluates and the example builds**
 
 Run:
 ```bash
@@ -137,7 +137,7 @@ nix build .#checks.x86_64-linux.example --dry-run 2>&1 | tail -5
 ```
 Expected: no evaluation errors. The dry-run lists derivations to build without failing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add .gitmodules upstream flake.nix flake.lock modules/claude-code.nix examples/home.nix
@@ -146,7 +146,7 @@ git commit -m "feat: scaffold flake, upstream submodule, home-manager test harne
 
 ---
 
-### Task 2: Module options + CLI package installation
+### Task 2: Module options + CLI package installation  ✅ **DONE** (commits `b355ffe..9145226`, review clean)
 
 **Files:**
 - Modify: `modules/claude-code.nix`
@@ -156,7 +156,7 @@ git commit -m "feat: scaffold flake, upstream submodule, home-manager test harne
 - Produces options: `programs.claudeBootstrap.{enable, language, statusLine, rtk, plugins, personalClaudeMd}`.
 - Produces: `config.home.packages` including ripgrep, fd, jq, yq-go, gh, glab, nodejs, bun, claude-code.
 
-- [ ] **Step 1: Replace the module stub with options + packages**
+- [x] **Step 1: Replace the module stub with options + packages**
 
 `modules/claude-code.nix`:
 
@@ -209,14 +209,14 @@ in {
 
 Note: `../pkgs/rtk.nix` does not exist until Task 5, but with `cfg.rtk = false` in the example it is never evaluated (`lib.optional false _` short-circuits). Keep the example's `rtk = false;`.
 
-- [ ] **Step 2: Uncomment the rtk line in the example**
+- [x] **Step 2: Uncomment the rtk line in the example**
 
 In `examples/home.nix`, ensure this line is active:
 ```nix
   programs.claudeBootstrap.rtk = false;
 ```
 
-- [ ] **Step 3: Verify packages resolve**
+- [x] **Step 3: Verify packages resolve**
 
 Run:
 ```bash
@@ -230,7 +230,7 @@ nix build .#checks.x86_64-linux.example --dry-run 2>&1 | tail -5
 ```
 Expected: no "attribute 'X' missing" errors for any package (ripgrep, fd, jq, yq-go, gh, glab, nodejs, bun, claude-code all exist in nixpkgs-unstable).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add modules/claude-code.nix examples/home.nix
@@ -239,7 +239,7 @@ git commit -m "feat: module options and CLI package installation"
 
 ---
 
-### Task 3: Deploy templates and skills into ~/.claude
+### Task 3: Deploy templates and skills into ~/.claude  ✅ **DONE** (commits `9145226..a50cbf5`, review clean)
 
 **Files:**
 - Modify: `modules/claude-code.nix`
@@ -248,7 +248,7 @@ git commit -m "feat: module options and CLI package installation"
 - Consumes: `cfg.personalClaudeMd`.
 - Produces: `config.home.file` entries for `.claude/CLAUDE.md`, `.claude/RTK.md`, `.claude/conventional-commits.md`, `.claude/rules/context7.md`, and one entry per skill dir under `.claude/skills/`.
 
-- [ ] **Step 1: Add file-deployment logic to the module**
+- [x] **Step 1: Add file-deployment logic to the module**
 
 Insert these `let` bindings (after `cfg = ...;`):
 
@@ -281,7 +281,7 @@ Add to the `config` block (keep the existing `home.packages`):
     };
 ```
 
-- [ ] **Step 2: Verify the file set is generated from the submodule**
+- [x] **Step 2: Verify the file set is generated from the submodule**
 
 Run:
 ```bash
@@ -296,7 +296,7 @@ nix build '.?submodules=1#checks.x86_64-linux.example' --dry-run 2>&1 | tail -5
 ```
 Expected: no "path does not exist" errors for any `${templates}/...` source. `skillNames` non-empty (graphify, llm-council, markitdown, playwright-cli, prd, writing-adrs).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add modules/claude-code.nix
@@ -305,7 +305,7 @@ git commit -m "feat: deploy CLAUDE.md, rules, and skills from upstream submodule
 
 ---
 
-### Task 4: Build settings.json with upstream's conditional transforms
+### Task 4: Build settings.json with upstream's conditional transforms  ✅ **DONE** (commits `a50cbf5..9acf2c8`, review clean)
 
 **Files:**
 - Modify: `modules/claude-code.nix`
@@ -314,7 +314,7 @@ git commit -m "feat: deploy CLAUDE.md, rules, and skills from upstream submodule
 - Consumes: `cfg.language`, `cfg.statusLine`, `cfg.rtk`.
 - Produces: `config.home.file.".claude/settings.json"`.
 
-- [ ] **Step 1: Add the settings builder**
+- [x] **Step 1: Add the settings builder**
 
 Add to the `let` bindings:
 
@@ -335,7 +335,7 @@ Add to the `home.file` attrset:
       ".claude/settings.json".source = settingsFile;
 ```
 
-- [ ] **Step 2: Verify the transforms**
+- [x] **Step 2: Verify the transforms**
 
 Run (language override + hooks/statusLine presence):
 ```bash
@@ -349,7 +349,7 @@ jq '.language, (.hooks|type), (.statusLine|type)' \
 ```
 Expected: `"English"`, then `"null"` (hooks deleted because example sets `rtk = false`), then `"object"` (statusLine kept). If the `home-files` path differs, locate it: `find $(readlink -f result-check) -name settings.json`.
 
-- [ ] **Step 3: Verify rtk=true keeps hooks (temporary toggle)**
+- [x] **Step 3: Verify rtk=true keeps hooks (temporary toggle)**
 
 Run:
 ```bash
@@ -367,7 +367,7 @@ nix eval --impure --expr '
 ```
 Expected: `{ withHooks = true; withoutHooks = false; }`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add modules/claude-code.nix
@@ -376,7 +376,7 @@ git commit -m "feat: build settings.json with language/statusLine/rtk transforms
 
 ---
 
-### Task 5: Package rtk and wire the rtk option
+### Task 5: Package rtk and wire the rtk option  ✅ **DONE** (commits `9acf2c8..4ecdfdf`, review clean)
 
 **Files:**
 - Create: `pkgs/rtk.nix`
@@ -385,7 +385,7 @@ git commit -m "feat: build settings.json with language/statusLine/rtk transforms
 **Interfaces:**
 - Produces: `packages.<system>.rtk`; consumed by the module's `home.packages` when `cfg.rtk = true`.
 
-- [ ] **Step 1: Discover rtk's source**
+- [x] **Step 1: Discover rtk's source**
 
 `rtk` = "Rust Token Killer". Find how upstream installs it and where the source lives:
 ```bash
@@ -393,7 +393,7 @@ grep -n -i "rtk" upstream/setup.sh
 ```
 Look for a `cargo install <name>`, a `brew install <formula>` (inspect the formula's `homepage`/`url`), or a GitHub release URL. Record: crate name (if on crates.io) OR GitHub `owner/repo` + a release tag.
 
-- [ ] **Step 2: Write the derivation (crates.io form)**
+- [x] **Step 2: Write the derivation (crates.io form)**
 
 If rtk is a published crate, `pkgs/rtk.nix`:
 
@@ -425,7 +425,7 @@ If it is a GitHub source instead, swap `src` for:
 ```
 (and add `fetchFromGitHub` to the function args).
 
-- [ ] **Step 3: Resolve the hashes**
+- [x] **Step 3: Resolve the hashes**
 
 Nix reports the correct hash when given a fake one. Iterate:
 ```bash
@@ -434,7 +434,7 @@ nix build .#packages.x86_64-linux.rtk 2>&1 | grep -A2 "hash mismatch"
 Copy the `got:` hash into `src.hash`, rebuild, then copy the next `got:` into `cargoHash`. Rebuild until it compiles.
 Expected final: `nix build .#packages.x86_64-linux.rtk` succeeds and `./result/bin/rtk --version` runs.
 
-- [ ] **Step 4: Re-add the packages output to flake.nix**
+- [x] **Step 4: Re-add the packages output to flake.nix**
 
 Restore inside `outputs` (removed in Task 1):
 ```nix
@@ -443,7 +443,7 @@ Restore inside `outputs` (removed in Task 1):
         in { rtk = pkgs.callPackage ./pkgs/rtk.nix { }; });
 ```
 
-- [ ] **Step 5: Verify the module builds rtk when enabled**
+- [x] **Step 5: Verify the module builds rtk when enabled**
 
 Run:
 ```bash
@@ -452,7 +452,7 @@ nix build .#packages.x86_64-linux.rtk && ./result/bin/rtk --version
 Expected: builds and prints a version.
 Note: leave `examples/home.nix` at `rtk = false;` so `nix flake check` stays fast; rtk is verified via the `packages` output directly.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add pkgs/rtk.nix flake.nix
@@ -463,7 +463,7 @@ If rtk cannot be packaged reasonably, stop and report: the fallback (`rtk = fals
 
 ---
 
-### Task 6: Activation script for plugins, marketplaces, and MCP
+### Task 6: Activation script for plugins, marketplaces, and MCP  ✅ **DONE** (commits `4ecdfdf..a74e103`, review clean)
 
 **Files:**
 - Modify: `modules/claude-code.nix`
@@ -472,7 +472,7 @@ If rtk cannot be packaged reasonably, stop and report: the fallback (`rtk = fals
 - Consumes: `cfg.plugins`.
 - Produces: `config.home.activation.claudeBootstrap`.
 
-- [ ] **Step 1: Add the marketplace/plugin/MCP data and activation script**
+- [x] **Step 1: Add the marketplace/plugin/MCP data and activation script**
 
 Add to the `let` bindings:
 
@@ -512,7 +512,7 @@ Add to the `config` block:
     );
 ```
 
-- [ ] **Step 2: Verify the activation script content**
+- [x] **Step 2: Verify the activation script content**
 
 Run:
 ```bash
@@ -524,7 +524,7 @@ grep -c "command -v claude" result-check/activate
 ```
 Expected: `5`, `7`, `1`, `1`. (If the generated file is not `activate`, find it: `grep -rl "context7" result-check`.)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add modules/claude-code.nix
