@@ -48,10 +48,11 @@ claude-code-nix/
 reads them at eval time from the flake source tree → home-manager writes/symlinks them
 into `~/.claude/` and runs an activation script for the imperative bits.
 
-**Submodules caveat (accepted):** consuming the flake requires
-`inputs.claude-code-nix.url = "github:<you>/claude-code-nix?submodules=1";`. Without
-`?submodules=1`, Nix fetches the repo without submodule contents, `upstream/templates/`
-is empty, and evaluation fails.
+**Submodules caveat (accepted):** consuming the flake requires the `git+https` (or
+`git+ssh`) scheme with `?submodules=1`:
+`inputs.claude-code-nix.url = "git+https://github.com/<you>/claude-code-nix?submodules=1";`.
+The `github:` scheme fetches a tarball that omits submodules, so `upstream/templates/`
+would be empty and evaluation fails.
 
 ## Components
 

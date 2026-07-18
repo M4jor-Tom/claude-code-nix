@@ -5,11 +5,15 @@ for NixOS, as a home-manager module. Upstream is tracked as a git submodule.
 
 ## Usage
 
-Add to your flake inputs — **`?submodules=1` is required** (templates live in a submodule):
+Add to your flake inputs. Templates live in a git submodule, so you **must** use the
+`git+https` (or `git+ssh`) scheme with `?submodules=1` — the `github:` scheme fetches a
+tarball that omits submodules, leaving `upstream/templates/` empty and failing eval:
 
 ```nix
-inputs.claude-code-nix.url = "github:<you>/claude-code-nix?submodules=1";
+inputs.claude-code-nix.url = "git+https://github.com/<you>/claude-code-nix?submodules=1";
 ```
+
+(For a private repo use `git+ssh://git@github.com/<you>/claude-code-nix?submodules=1`.)
 
 Import the module in your home-manager config:
 
