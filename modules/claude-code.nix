@@ -30,12 +30,13 @@ let
   marketplaces = [
     "anthropics/claude-plugins-official"
     "thedotmack/claude-mem"
+    "obra/superpowers-marketplace"
     "nextlevelbuilder/ui-ux-pro-max-skill"
     "Egonex-AI/Understand-Anything"
     "DietrichGebert/ponytail"
   ];
   plugins = [
-    "superpowers@claude-plugins-official"
+    "superpowers@superpowers-marketplace"
     "frontend-design@claude-plugins-official"
     "claude-md-management@claude-plugins-official"
     "claude-mem@thedotmack"
