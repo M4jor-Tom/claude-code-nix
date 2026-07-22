@@ -24,17 +24,21 @@ let
       s0 = baseSettings // { language = cfg.language; };
       s1 = if cfg.statusLine then s0 else builtins.removeAttrs s0 [ "statusLine" ];
       s2 = if cfg.rtk then s1 else builtins.removeAttrs s1 [ "hooks" ];
-    in s2;
+      s3 = if cfg.plugins then s2 // { inherit enabledPlugins extraKnownMarketplaces; } else s2;
+    in s3;
   settingsFile = (pkgs.formats.json { }).generate "claude-settings.json" settings;
 
-  marketplaces = [
-    "anthropics/claude-plugins-official"
-    "thedotmack/claude-mem"
-    "obra/superpowers-marketplace"
-    "nextlevelbuilder/ui-ux-pro-max-skill"
-    "Egonex-AI/Understand-Anything"
-    "DietrichGebert/ponytail"
-  ];
+  # Marketplace name (must match the @suffix used in `plugins`) -> github repo.
+  # The name is NOT reliably the repo basename: claude-mem lives in the
+  # "thedotmack" marketplace, and Understand-Anything's name is lower-cased.
+  marketplaces = {
+    "claude-plugins-official" = "anthropics/claude-plugins-official";
+    "thedotmack"              = "thedotmack/claude-mem";
+    "superpowers-marketplace" = "obra/superpowers-marketplace";
+    "ui-ux-pro-max-skill"     = "nextlevelbuilder/ui-ux-pro-max-skill";
+    "understand-anything"     = "Egonex-AI/Understand-Anything";
+    "ponytail"                = "DietrichGebert/ponytail";
+  };
   plugins = [
     "superpowers@superpowers-marketplace"
     "frontend-design@claude-plugins-official"
@@ -45,6 +49,13 @@ let
     "ponytail@ponytail"
   ];
   mktLines = pre: xs: lib.concatMapStringsSep "\n" (x: "  claude ${pre} ${x} || true") xs;
+
+  # Declarative counterparts of the imperative activation commands below, baked
+  # into settings.json (hybrid: the hook still guarantees the initial git clone,
+  # while these keys make the enabled state declared and reproducible).
+  extraKnownMarketplaces =
+    lib.mapAttrs (_name: repo: { source = { source = "github"; repo = repo; }; }) marketplaces;
+  enabledPlugins = lib.genAttrs plugins (_: true);
 in {
   options.programs.claudeBootstrap = {
     enable = lib.mkEnableOption "declarative claude-code-bootstrap setup";
@@ -97,7 +108,7 @@ in {
       lib.hm.dag.entryAfter [ "installPackages" ] ''
         export PATH="${config.home.profileDirectory}/bin:$PATH"
         if command -v claude >/dev/null 2>&1; then
-        ${mktLines "plugin marketplace add" marketplaces}
+        ${mktLines "plugin marketplace add" (builtins.attrValues marketplaces)}
         ${mktLines "plugin install" plugins}
           claude mcp add --transport http context7 https://mcp.context7.com/mcp --scope user || true
         else
