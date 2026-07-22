@@ -17,70 +17,14 @@ let
     then "${templates}/CLAUDE.md"
     else pkgs.writeText "CLAUDE.md"
       (builtins.readFile "${templates}/CLAUDE.md" + "\n\n" + cfg.personalClaudeMd);
-
-  baseSettings = builtins.fromJSON (builtins.readFile "${templates}/settings.json");
-  settings =
-    let
-      s0 = baseSettings // { language = cfg.language; };
-      s1 = if cfg.statusLine then s0 else builtins.removeAttrs s0 [ "statusLine" ];
-      s2 = if cfg.rtk then s1 else builtins.removeAttrs s1 [ "hooks" ];
-      s3 = if cfg.plugins then s2 // { inherit extraKnownMarketplaces; } else s2;
-    in s3;
-  settingsFile = (pkgs.formats.json { }).generate "claude-settings.json" settings;
-
-  # Marketplace name (must match the @suffix used in `plugins`) -> github repo.
-  # The name is NOT reliably the repo basename: claude-mem lives in the
-  # "thedotmack" marketplace, and Understand-Anything's name is lower-cased.
-  marketplaces = {
-    "claude-plugins-official" = "anthropics/claude-plugins-official";
-    "thedotmack"              = "thedotmack/claude-mem";
-    "superpowers-marketplace" = "obra/superpowers-marketplace";
-    "ui-ux-pro-max-skill"     = "nextlevelbuilder/ui-ux-pro-max-skill";
-    "understand-anything"     = "Egonex-AI/Understand-Anything";
-    "ponytail"                = "DietrichGebert/ponytail";
-  };
-  plugins = [
-    "superpowers@claude-plugins-official"
-    "frontend-design@claude-plugins-official"
-    "claude-md-management@claude-plugins-official"
-    "claude-mem@thedotmack"
-    "ui-ux-pro-max@ui-ux-pro-max-skill"
-    "understand-anything@understand-anything"
-    "ponytail@ponytail"
-  ];
-  mktLines = pre: xs: lib.concatMapStringsSep "\n" (x: "  claude ${pre} ${x} || true") xs;
-
-  # Declarative counterpart of the imperative marketplace activation commands,
-  # baked into settings.json so marketplaces are known even if the activation
-  # script hasn't run yet (e.g., first switch before claude is available).
-  extraKnownMarketplaces =
-    lib.mapAttrs (_name: repo: { source = { source = "github"; repo = repo; }; }) marketplaces;
 in {
   options.programs.claudeBootstrap = {
     enable = lib.mkEnableOption "declarative claude-code-bootstrap setup";
 
-    language = lib.mkOption {
-      type = lib.types.str;
-      default = "English";
-      description = "Value written to settings.json .language (upstream default is French).";
-    };
-
-    statusLine = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Keep the ccstatusline statusLine block in settings.json.";
-    };
-
     rtk = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Install rtk and keep the RTK PreToolUse hooks. If false, hooks are stripped (matches upstream when rtk absent).";
-    };
-
-    plugins = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Run the plugin/marketplace/MCP activation commands.";
+      description = "Install the rtk CLI token-saving proxy (adds it to home.packages). settings.json is verbatim from overrides/, so this no longer alters it.";
     };
 
     personalClaudeMd = lib.mkOption {
@@ -100,22 +44,21 @@ in {
       ".claude/RTK.md".source = "${templates}/RTK.md";
       ".claude/conventional-commits.md".source = "${templates}/conventional-commits.md";
       ".claude/rules/context7.md".source = "${templates}/rules/context7.md";
-      ".claude/settings.json".source = settingsFile;
+      ".claude/settings.json".source = ../overrides/settings.json;
     };
 
-    home.activation.claudeBootstrap = lib.mkIf cfg.plugins (
+    # Plugins/marketplaces are user state (claude plugin ...), declared in
+    # overrides/settings.json .enabledPlugins — not managed here. This only
+    # registers the context7 MCP endpoint.
+    home.activation.claudeBootstrap =
       lib.hm.dag.entryAfter [ "installPackages" ] ''
         export PATH="${config.home.profileDirectory}/bin:$PATH"
         if command -v claude >/dev/null 2>&1; then
-        ${mktLines "plugin marketplace add" (builtins.attrValues marketplaces)}
-        ${mktLines "plugin install" plugins}
-        ${mktLines "plugin enable" plugins}
           claude mcp add --transport http context7 https://mcp.context7.com/mcp --scope user || true
         else
-          echo "claudeBootstrap: 'claude' not on PATH; skipping plugin/MCP setup" >&2
+          echo "claudeBootstrap: 'claude' not on PATH; skipping MCP setup" >&2
         fi
-      ''
-    );
+      '';
 
     assertions = [{
       assertion = builtins.pathExists "${templates}/settings.json";

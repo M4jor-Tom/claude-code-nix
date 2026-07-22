@@ -21,13 +21,13 @@ Import the module in your home-manager config:
 {
   imports = [ inputs.claude-code-nix.homeManagerModules.default ];
   programs.claudeBootstrap.enable = true;
-  # options: language (default "English"), statusLine, rtk, plugins, personalClaudeMd
+  # options: rtk, personalClaudeMd
 }
 ```
 
 `programs.claudeBootstrap.enable = true` installs the CLI tools, writes `~/.claude/`
-(CLAUDE.md, RTK.md, rules, skills, settings.json), and runs plugin/marketplace/MCP
-setup on activation.
+(CLAUDE.md, RTK.md, rules, skills, settings.json), and registers the context7 MCP
+endpoint on activation.
 
 ### Notes
 
@@ -39,11 +39,14 @@ setup on activation.
   **abort the entire first switch** on these unmanaged files unless you set
   `home.backupFileExtension = "bak";` (which moves them aside). This is effectively
   required, not optional.
-- The plugin/marketplace/MCP setup runs on **every** `home-manager switch` (≈13 `claude`
-  network calls: it installs third-party marketplace plugins and registers the context7
-  MCP endpoint). It's idempotent and non-fatal, but if you don't want it, set
-  `programs.claudeBootstrap.plugins = false;`.
-- `rtk = false` strips the RTK hooks from settings.json (matches upstream when rtk is absent).
+- **Plugins are not managed here.** They're declared in `overrides/settings.json`
+  `.enabledPlugins`. That key only *enables* plugins; adding marketplaces and installing
+  them (`claude plugin marketplace add` / `install`) is user state in
+  `~/.claude/plugins/` that survives switches — do it once, by hand, per machine.
+- Activation registers only the context7 MCP endpoint (`claude mcp add`, idempotent,
+  non-fatal) on every `home-manager switch`.
+- `settings.json` is installed verbatim from `overrides/settings.json` in this repo — edit that file to change it.
+- `rtk = false` skips installing the rtk CLI (it no longer alters settings.json).
 - CLAUDE.md is upstream's; set `personalClaudeMd` to append your own block.
 
 ## Keeping it in sync
